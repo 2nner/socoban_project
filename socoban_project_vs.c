@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 #include <conio.h>
 
@@ -11,12 +10,12 @@
 
 int num_map; // 맵 개수
 int cnt_undo = 5; // 되돌리기 남은 횟수
-int current_stage = 1; // 현재 플레이중인 맵 스테이지
 char username[11]; // 유저 닉네임
-char PATH_MAP[] = "C:\\Users\\wjdgh\\Desktop\\socoban_project\\map.txt"; // map 파일이 있는 경로
+char PATH_MAP[] = "C:\\Users\\khsbs\\CLionProjects\\project\\map.txt"; // map 파일이 있는 경로
 char map[6][30][30]; // 맵 저장하는 곳
 char current_map[30][30]; // 현재 플레이중인 맵
 int length_garo[6], length_sero[6]; // Stage 별로 맵 가로 세로 길이 저장
+int pwd_g, pwd_s; // pwd_g : 가로 현재 위치, pwd_s : 세로 현재 위치
 int count = 0; // 이동한 횟수 저장
 
 // 박스 개수와 보관 장소 개수가 다를 때 출력하는 에러 메세지. 출력 후 프로그램이 종료됨
@@ -70,7 +69,7 @@ void checkMap() {
 
 // 커맨드 출력
 void printCommand() {
-	printf("h(왼족), j(아래), k(위), l(오른쪽)\n");
+	printf("h(왼쪽), j(아래), k(위), l(오른쪽)\n");
 	printf("u(undo) : 되돌리기 (남은 횟수 : %d번)\n", cnt_undo);
 	printf("r(replay) : 현재 맵 처음부터 다시 시작 (움직임 횟수 계속 유지됨)\n");
 	printf("n(new) : 첫 번째 맵부터 다시 시작 (움직임 횟수 기록은 삭제됨)\n");
@@ -98,6 +97,44 @@ void getNickname() {
 	}
 }
 
+// 움직임이 구현되있는 함수, 사용법 : move(울직이는 세로 칸 수, 움직이는 가로 칸 수, 현재 스테이지 넘버)
+void move(int s, int g, int current_stage) {
+	if (current_map[pwd_s + s][pwd_g + g] == '.' || current_map[pwd_s + s][pwd_g + g] == 'O') {
+		if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
+			current_map[pwd_s][pwd_g] = '.';
+		}
+		else {
+			current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
+		}
+	}
+	else if (current_map[pwd_s + s][pwd_g + g] == '#') return;
+	else if (current_map[pwd_s + s][pwd_g + g] == '$') {
+		if (current_map[pwd_s + (2 * s)][pwd_g + (2 * g)] == '$' || current_map[pwd_s + (2 * s)][pwd_g + (2 * g)] == '#') return;
+		if (current_map[pwd_s + (2 * s)][pwd_g + (2 * g)] == '.') {
+			current_map[pwd_s + (2 * s)][pwd_g + (2 * g)] = '$';
+			if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
+				current_map[pwd_s][pwd_g] = '.';
+			}
+			else {
+				current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
+			}
+		}
+		else if (current_map[pwd_s + (2 * s)][pwd_g + (2 * g)] == 'O') {
+			current_map[pwd_s + (2 * s)][pwd_g + (2 * g)] = '$';
+			if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
+				current_map[pwd_s][pwd_g] = '.';
+			}
+			else {
+				current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
+			}
+		}
+	}
+
+	current_map[pwd_s + s][pwd_g + g] = '@';
+	pwd_s += s;
+	pwd_g += g;
+}
+
 // 랭킹 출력
 void printRank() {
 
@@ -110,13 +147,11 @@ int main(void) {
 	clear();
 
 	// 게임 시작
-	for (int stage = 1; stage <= num_map; ++stage) {
+	for (int current_stage = 1; current_stage <= num_map; ++current_stage) {
 		// 스테이지 복사
 		for (int i = 0; i < length_sero[current_stage]; ++i) {
 			strcpy(current_map[i], map[current_stage][i]);
 		}
-
-		int pwd_g, pwd_s; // pwd_g : 가로 현재 위치, pwd_s : 세로 현재 위치
 
 		// 현재 위치 탐색
 		for (int i = 0; i < length_sero[current_stage]; ++i) {
@@ -134,195 +169,59 @@ int main(void) {
 		while (1) {
 			system("cls");
 			char c;
-			int end_count = 0; // 구멍개수 세는 변수
+			int end_count = 0; // 구멍 개수 세는 변수
 
-
+			printf("Stage %d\n", current_stage);
 			// 맵 출력
 			for (int i = 0; i < length_sero[current_stage]; ++i) {
 				printf("%s\n", current_map[i]);
-
 			}
-			printf("%d", count);
+			printf("움직인 횟수 : %d\n", count);
+
+			// 지정된 장소 안에 박스가 다 들어갔는 지 체크하고, 참일 시에 while문 탈출
+			for (int s = 0; s < length_sero[1]; s++) {
+				for (int g = 0; g < length_garo[1]; g++) {
+					if (current_map[s][g] == 'O')
+						end_count++;
+				}
+			}
+			if (map[current_stage][pwd_s][pwd_g] == 'O') end_count++;
+			printf("남은 구멍 개수 : %d\n", end_count);
+			if (end_count == 0) break;
 
 			c = getch();
 			switch (c) {
 			case 75: { // h
-				if (current_map[pwd_s][pwd_g - 1] == '.' || current_map[pwd_s][pwd_g - 1] == 'O') {
-					if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-						current_map[pwd_s][pwd_g] = '.';
-					}
-					else {
-						current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-					}
-				}
-				else if (current_map[pwd_s][pwd_g - 1] == '#') continue;
-				else if (current_map[pwd_s][pwd_g - 1] == '$') {
-					if (current_map[pwd_s][pwd_g - 2] == '$' || current_map[pwd_s][pwd_g - 2] == '#') continue;
-					if (current_map[pwd_s][pwd_g - 2] == '.') {
-						current_map[pwd_s][pwd_g - 2] = '$';
-						if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-							current_map[pwd_s][pwd_g] = '.';
-						}
-						else {
-							current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-						}
-					}
-					else if (current_map[pwd_s][pwd_g - 2] == 'O') {
-						current_map[pwd_s][pwd_g - 2] = '$';
-						if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-							current_map[pwd_s][pwd_g] = '.';
-						}
-						else {
-							current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-						}
-					}
-				}
-
-				current_map[pwd_s][pwd_g - 1] = '@';
-				pwd_g -= 1;
 				count++;
+				move(0, -1, current_stage);
 				break;
 			}
 
 			case 80: { // j
-				if (current_map[pwd_s + 1][pwd_g] == '.' || current_map[pwd_s + 1][pwd_g] == 'O') {
-					if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-						current_map[pwd_s][pwd_g] = '.';
-					}
-					else {
-						current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-					}
-				}
-				else if (current_map[pwd_s + 1][pwd_g] == '#') continue;
-				else if (current_map[pwd_s + 1][pwd_g] == '$') {
-					if (current_map[pwd_s + 2][pwd_g] == '$' || current_map[pwd_s + 2][pwd_g] == '#') continue;
-					if (current_map[pwd_s + 2][pwd_g] == '.') {
-						current_map[pwd_s + 2][pwd_g] = '$';
-						if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-							current_map[pwd_s][pwd_g] = '.';
-						}
-						else {
-							current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-						}
-					}
-					else if (current_map[pwd_s + 2][pwd_g] == 'O') {
-						current_map[pwd_s + 2][pwd_g] = '$';
-						if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-							current_map[pwd_s][pwd_g] = '.';
-						}
-						else {
-							current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-						}
-					}
-				}
-
-				current_map[pwd_s + 1][pwd_g] = '@';
-				pwd_s += 1;
 				count++;
+				move(1, 0, current_stage);
 				break;
 			}
 
 			case 72: { // k
-				if (current_map[pwd_s - 1][pwd_g] == '.' || current_map[pwd_s - 1][pwd_g] == 'O') {
-					if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-						current_map[pwd_s][pwd_g] = '.';
-					}
-					else {
-						current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-					}
-				}
-				else if (current_map[pwd_s - 1][pwd_g] == '#') continue;
-				else if (current_map[pwd_s - 1][pwd_g] == '$') {
-					if (current_map[pwd_s - 2][pwd_g] == '$' || current_map[pwd_s - 2][pwd_g] == '#') continue;
-					if (current_map[pwd_s - 2][pwd_g] == '.') {
-						current_map[pwd_s - 2][pwd_g] = '$';
-						if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-							current_map[pwd_s][pwd_g] = '.';
-						}
-						else {
-							current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-						}
-					}
-					else if (current_map[pwd_s - 2][pwd_g] == 'O') {
-						current_map[pwd_s - 2][pwd_g] = '$';
-						if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-							current_map[pwd_s][pwd_g] = '.';
-						}
-						else {
-							current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-						}
-					}
-				}
-
-				current_map[pwd_s - 1][pwd_g] = '@';
-				pwd_s -= 1;
 				count++;
+				move(-1, 0, current_stage);
 				break;
 			}
 
 			case 77: { // l
-				if (current_map[pwd_s][pwd_g + 1] == '.' || current_map[pwd_s][pwd_g + 1] == 'O') {
-					if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-						current_map[pwd_s][pwd_g] = '.';
-					}
-					else {
-						current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-					}
-				}
-				else if (current_map[pwd_s][pwd_g + 1] == '#') continue;
-				else if (current_map[pwd_s][pwd_g + 1] == '$') {
-					if (current_map[pwd_s][pwd_g + 2] == '$' || current_map[pwd_s][pwd_g + 2] == '#') continue;
-					if (current_map[pwd_s][pwd_g + 2] == '.') {
-						current_map[pwd_s][pwd_g + 2] = '$';
-						if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-							current_map[pwd_s][pwd_g] = '.';
-						}
-						else {
-							current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-						}
-					}
-					else if (current_map[pwd_s][pwd_g + 2] == 'O') {
-						current_map[pwd_s][pwd_g + 2] = '$';
-						if (map[current_stage][pwd_s][pwd_g] == '@' || map[current_stage][pwd_s][pwd_g] == '$') {
-							current_map[pwd_s][pwd_g] = '.';
-						}
-						else {
-							current_map[pwd_s][pwd_g] = map[current_stage][pwd_s][pwd_g];
-						}
-					}
-				}
-
-				current_map[pwd_s][pwd_g + 1] = '@';
-				pwd_g += 1;
 				count++;
+				move(0, 1, current_stage);
 				break;
 			}
-
-
 			}
-			for (int s = 0; s < length_sero[1]; s++) {
-
-				for (int g = 0; g < length_garo[1]; g++)
-				{
-					if (current_map[s][g] == '0')
-					{
-						end_count++;
-					}
-
-
-
-				}
-			}
-
-
-
-
-
-			if (end_count = 0 && map[1][pwd_s][pwd_g] != '0')
-				break;
-
 
 		}
+		printf("Stage %d Clear!", current_stage);
+		count = 0;
+		getch();
+		fflush(stdin);
 	}
 	printf("스테이지를 모두 완료하셨네요 축하합니다. \n");
+	getch();
 }
