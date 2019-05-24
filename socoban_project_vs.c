@@ -11,12 +11,18 @@
 int num_map; // 맵 개수
 int cnt_undo = 5; // 되돌리기 남은 횟수
 char username[11]; // 유저 닉네임
-char PATH_MAP[] = "C:\\Users\\khsbs\\CLionProjects\\project\\map.txt"; // map 파일이 있는 경로
+char PATH_MAP[] = "C:\\Users\\김소현\\Desktop\\socoban_project\\map.txt"; // map 파일이 있는 경로
 char map[6][30][30]; // 맵 저장하는 곳
 char current_map[30][30]; // 현재 플레이중인 맵
 int length_garo[6], length_sero[6]; // Stage 별로 맵 가로 세로 길이 저장
 int pwd_g, pwd_s; // pwd_g : 가로 현재 위치, pwd_s : 세로 현재 위치
+int current_stage; // 현재 플레이중인 스테이지
 int count = 0; // 이동한 횟수 저장
+int end_count; // 남은 구멍 개수
+int save_stage; //저장할 스테이지
+int save_count; // 저장할 움직인 횟수
+int save_end_count; // 저장할 남은 구멍 개수
+
 
 // 박스 개수와 보관 장소 개수가 다를 때 출력하는 에러 메세지. 출력 후 프로그램이 종료됨
 void error(int i) {
@@ -140,6 +146,49 @@ void printRank() {
 
 }
 
+// 저장
+void save(int save_stage, int save_count, int save_end_count)
+{
+	FILE* save;
+	save = fopen("sokoban.txt", "w");
+	// fprintf(save, "유저 이름 : %s\n", username);
+	fprintf(save, "Stage %d\n", save_stage);
+	for (int i = 0; i < length_sero[save_stage]; ++i) {
+		fprintf(save, "%s\n", current_map[i]);
+	}
+	fprintf(save, "움직인 횟수 : %d\n", save_count);
+	fprintf(save, "남은 구멍 개수 : %d\n", save_end_count);
+	fclose(save);
+}
+
+// 현재 맵 처음부터 다시 시작
+void replay() {
+
+
+	clear();
+
+
+	for (int i = 0; i < length_sero[current_stage]; ++i) {
+		strcpy(current_map[i], map[current_stage][i]);
+	}
+
+
+	for (int i = 0; i < length_sero[current_stage]; ++i) {
+		int flag = 0;
+		for (int j = 0; j < length_garo[current_stage]; ++j) {
+			if (current_map[i][j] == '@') {
+				pwd_s = i, pwd_g = j, flag = 1;
+				break;
+			}
+		}
+
+		if (flag) break;
+
+	}
+
+
+}
+
 int main(void) {
 	checkMap();
 	getNickname();
@@ -147,7 +196,10 @@ int main(void) {
 	clear();
 
 	// 게임 시작
-	for (int current_stage = 1; current_stage <= num_map; ++current_stage) {
+	for (current_stage = 1; current_stage <= num_map; ++current_stage) {
+
+		save_stage = current_stage;
+
 		// 스테이지 복사
 		for (int i = 0; i < length_sero[current_stage]; ++i) {
 			strcpy(current_map[i], map[current_stage][i]);
@@ -164,6 +216,8 @@ int main(void) {
 			}
 
 			if (flag) break;
+
+
 		}
 
 		while (1) {
@@ -187,6 +241,7 @@ int main(void) {
 			}
 			if (map[current_stage][pwd_s][pwd_g] == 'O') end_count++;
 			printf("남은 구멍 개수 : %d\n", end_count);
+			save_count = end_count;
 			if (end_count == 0) break;
 
 			c = getch();
@@ -212,6 +267,22 @@ int main(void) {
 			case 77: { // l
 				count++;
 				move(0, 1, current_stage);
+				break;
+			}
+
+			case 115: { // s
+				save_count = count;
+				save_end_count = end_count;
+				save(save_stage, save_count, save_end_count);
+				printf("\n    저장이 완료되었습니다\n(계속하려면 아무키나 누르세요)");
+				getch();
+				break;
+			}
+
+			case 114: { // r
+
+				replay();
+				break;
 				break;
 			}
 			}
