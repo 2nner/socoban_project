@@ -1,14 +1,20 @@
-map1
-test1
-20
-test2
-30
-test3
-40
-map2
-test1
-30
-test2
-40
-test3
-50
+-Stage 1
+username1 10
+username2 20
+-Stage 2
+username3 30
+username4 40
+username5 50
+-Stage 3
+username6 60
+username7 70
+username8 80
+-Stage 4
+username9 90
+username10 100
+-Stage 5
+username11 110
+username12 120
+username13 130
+username14 140
+username15 150

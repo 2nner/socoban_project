@@ -175,8 +175,68 @@ void move(int s, int g, int current_stage) {
 }
 
 // 랭킹 출력
-void printRank() {
+void printRank(int stage) {
 
+	clear();
+
+	FILE* rank;
+	rank = fopen("ranking.txt", "rt");
+	char input[20];
+	int n;
+	char ranking[5][6][20];
+	int rank_count[5][6];
+
+	if (rank == NULL)
+	{
+		printf("저장된 랭킹이 없습니다.");
+	}
+
+	else {
+
+		clear();
+
+
+		if (stage == 0) {
+			for (int i = 0; i < 5; i++) {
+
+				while (fscanf(rank, "%s %d", input, &n) != EOF) {
+					printf("%s %d\n", input, n);
+				}
+			}
+
+		}
+
+
+		else {
+
+			clear();
+
+			int i = 0; //stage
+			int t = 0;
+			while (fscanf(rank, "%s %d", input, &n) != EOF) {
+				if (input[0] == '-') {
+					if (n == stage) {
+						printf("%s %d\n", input, n);
+					}
+					i = n - 1;
+					t = 0;
+					continue;
+				}
+				else {
+					strcpy(ranking[i][t], input);
+					rank_count[i][t] = n;
+					if (i == stage - 1) {
+						printf("%s %d\n", ranking[i][t], rank_count[i][t]);
+					}
+					t++;
+				}
+
+			}
+
+		}
+
+		fclose(rank);
+	}
 }
 
 // 저장
@@ -396,6 +456,27 @@ int main(void) {
 
 			case 'u': { //u
 				undo();
+				break;
+			}
+
+			case 116: { // t
+				char a;
+				a = getch();
+
+				switch (a) {
+				case 13: { // 엔터
+					printRank(0);
+					getch();
+					break;
+				}
+				case 32: {  // 스페이스바
+					int b;
+					scanf("%d", &b);
+					printRank(b);
+					getch();
+					break;
+				}
+				}
 				break;
 			}
 			}
