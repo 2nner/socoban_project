@@ -10,7 +10,7 @@
 int num_map; // 맵 개수
 int cnt_undo = 5; // 되돌리기 남은 횟수
 char username[11]; // 유저 닉네임
-char PATH_MAP[] = ""; // map 파일이 있는 경로
+char PATH_MAP[] = "map_easy.txt"; // map 파일이 있는 경로
 char map[6][30][30]; // 맵 저장하는 곳
 char current_map[30][30]; // 현재 플레이중인 맵
 int length_garo[6], length_sero[6]; // Stage 별로 맵 가로 세로 길이 저장
@@ -47,11 +47,10 @@ void clear() {
 // 박스 개수와 보관 장소 개수가 다를 때 출력하는 에러 메세지. 출력 후 프로그램이 종료됨
 void error(int i) {
 	printf("Stage %d의 박스 개수와 보관장소 개수가 같지 않거나, 옮길 박스 혹은 보관 장소가 존재하지 않습니다. 프로그램을 종료합니다.", i);
-	exit(EXIT_FAILURE);
 }
 
 // 맵 분리 & 스테이지 개수 카운트 & 스테이지 별로 박스($) 개수와 보관 장소(O) 개수가 같지 않거나 아예 없을 경우 에러 출력 후 프로그램 종료
-void checkMap() {
+int checkMap() {
 	int stage = 1, pos = 0;
 	char str[31];
 
@@ -75,7 +74,7 @@ void checkMap() {
 	}
 	else {
 		printf("파일의 경로가 잘못 지정되었거나, 파일이 없습니다!");
-		exit(EXIT_FAILURE);
+		return 0;
 	}
 	fclose(f);
 
@@ -89,8 +88,13 @@ void checkMap() {
 				else if (map[i][j][k] == 'O') num_place++;
 			}
 		}
-		if (num_box == 0 || num_place == 0 || num_box != num_place) error(i);
+		if (num_box == 0 || num_place == 0 || num_box != num_place) {
+			error(i);
+			return 0;
+		}
 	}
+
+	return 1;
 }
 
 // 커맨드 출력
@@ -195,7 +199,6 @@ void printRank(int stage) {
 
 		clear();
 
-
 		if (stage == 0) {
 			for (int i = 0; i < 5; i++) {
 
@@ -205,7 +208,6 @@ void printRank(int stage) {
 			}
 
 		}
-
 
 		else {
 
@@ -232,7 +234,6 @@ void printRank(int stage) {
 				}
 
 			}
-
 		}
 
 		fclose(rank);
@@ -257,14 +258,11 @@ void save()
 // 현재 맵 처음부터 다시 시작
 void replay() {
 
-
 	clear();
-
 
 	for (int i = 0; i < length_sero[current_stage]; ++i) {
 		strcpy(current_map[i], map[current_stage][i]);
 	}
-
 
 	for (int i = 0; i < length_sero[current_stage]; ++i) {
 		int flag = 0;
@@ -278,8 +276,6 @@ void replay() {
 		if (flag) break;
 
 	}
-
-
 }
 
 // u키를 누르면 이전으로 돌아감 (undo 구현, 현재맵을 백업파일로 바꾸고 횟수 1 차감함)
@@ -339,12 +335,64 @@ void newstart() {
 		if (flag) break;
 
 	}
+}
 
+// 스테이지 클리어 시 랭킹 업데이트
+void updateRank() {
+	FILE* f = fopen("ranking.txt", "r");
 
+	char input[11];
+	int n, pos;
+	int fstage; // 파일을 읽으면서 현재 스테이지 저장할 변수
+	int num_ranking[5] = { 0, 0, 0, 0, 0 }; // 스테이지 별 랭킹에 몇 명이 있는지 카운트
+	char username_ranking[5][5][20]; // 스테이지 별 랭킹에 등록되어 있는 사람들의 유저 네임 저장, [stage_num][ranking : 1st, 2nd..]
+	int score_ranking[5][5]; // 스테이지 별 랭킹에 동록되어 있는 사람들의 횟수 저장 [stage_num][ranking]
+
+	while (fscanf(f, "%s %d", input, &n) != EOF) {
+		if (input[0] == '-') {
+			pos = 0;
+			fstage = n - 1;
+			continue;
+		}
+		else {
+			strcpy(username_ranking[fstage][pos], input);
+			score_ranking[fstage][pos++] = n;
+			num_ranking[fstage]++;
+		}
+	}
+
+	// 새로 랭크에 오를 위치 선정
+	for (pos = 0; pos < num_ranking[current_stage - 1]; pos++) {
+		if (score_ranking[current_stage - 1][pos] > count)
+			break;
+	}
+
+	// 랭크될 위치에 랭킹 등록
+	if (pos < 5) {
+		for (int i = num_ranking[current_stage - 1] - 1; i >= pos; i--) {
+			if (i == 4) continue;
+			strcpy(username_ranking[current_stage - 1][i + 1], username_ranking[current_stage - 1][i]);
+			score_ranking[current_stage - 1][i + 1] = score_ranking[current_stage - 1][i];
+		}
+		strcpy(username_ranking[current_stage - 1][pos], username);
+		score_ranking[current_stage - 1][pos] = count;
+	}
+	if (num_ranking[current_stage - 1] < 5) num_ranking[current_stage - 1]++;
+
+	// 파일 재작성
+	f = fopen("ranking.txt", "w");
+
+	for (int i = 0; i < 5; i++) {
+		fprintf(f, "-Stage %d\n", i + 1);
+		for (int j = 0; j < num_ranking[i]; j++)
+			fprintf(f, "%s %d\n", username_ranking[i][j], score_ranking[i][j]);
+	}
+
+	fclose(f);
 }
 
 int main(void) {
-	checkMap();
+	if (!checkMap()) return 0;
 	getNickname();
 
 	clear();
@@ -386,6 +434,7 @@ int main(void) {
 			char c;
 			int end_count = 0; // 구멍 개수 세는 변수
 
+			printf("%s님 플레이 중\n", username);
 			printf("Stage %d\n", current_stage);
 			// 맵 출력
 			for (int i = 0; i < length_sero[current_stage]; ++i) {
@@ -481,13 +530,19 @@ int main(void) {
 				}
 				break;
 			}
+
+			case 'd': { // d
+				printf("\n");
+				printCommand();
+				getch();
+			}
 			}
 
 		}
 		printf("Stage %d Clear!", current_stage);
+		updateRank();
 		count = 0;
 		fflush(stdin);
-		getch();
 		getch();
 	}
 	printf("스테이지를 모두 완료하셨네요 축하합니다. \n");
