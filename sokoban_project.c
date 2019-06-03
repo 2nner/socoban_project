@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <conio.h> // Cygwin 사용 시 주석 처리
-//#include <termios.h> // Cygwin 사용 시 주석 해제
+//#include <conio.h> // Cygwin 사용 시 주석 처리
+#include <termios.h> // Cygwin 사용 시 주석 해제
 
 int num_map; // 맵 개수
 int cnt_undo = 5; // 되돌리기 남은 횟수
@@ -21,7 +21,6 @@ int end_count; // 남은 구멍 개수
 
 char before_map[6][30][30]; // 백업용 맵
 
-/* Cygwin 사용 시 주석 해제
 int getch() {
 	int ch;
 	struct termios buf;
@@ -37,11 +36,10 @@ int getch() {
 	tcsetattr(0, TCSAFLUSH, &save);
 	return ch;
 }
-*/
 
 // 화면 깨끗하게 해주는 함수, Cygwin 사용 시 cls를 clear로 바꿀 것
 void clear() {
-	system("cls");
+	system("clear");
 }
 
 // 박스 개수와 보관 장소 개수가 다를 때 출력하는 에러 메세지. 출력 후 프로그램이 종료됨
@@ -456,38 +454,38 @@ int main(void) {
 
 			c = getch();
 			switch (c) {
-			case 75: { // h
+			case 'h': { // h
 				count++;
 				move(0, -1, current_stage);
 				break;
 			}
 
-			case 80: { // j
+			case 'j': { // j
 				count++;
 				move(1, 0, current_stage);
 				break;
 			}
 
-			case 72: { // k
+			case 'k': { // k
 				count++;
 				move(-1, 0, current_stage);
 				break;
 			}
 
-			case 77: { // l
+			case 'l': { // l
 				count++;
 				move(0, 1, current_stage);
 				break;
 			}
 
-			case 115: { // s
+			case 's': { // s
 				save();
 				printf("\n    저장이 완료되었습니다\n(계속하려면 아무키나 누르세요)");
 				getch();
 				break;
 			}
 
-			case 114: { // r
+			case 'r': { // r
 				replay();
 				break;
 			}
@@ -508,7 +506,7 @@ int main(void) {
 				break;
 			}
 
-			case 116: { // t
+			case 't': { // t
 				printf("t");
 				char a;
 				a = getch();
@@ -517,6 +515,7 @@ int main(void) {
 				case 13: { // 엔터
 					printRank(0);
 					getch();
+					getch();
 					break;
 				}
 				case 32: {  // 스페이스바
@@ -524,6 +523,7 @@ int main(void) {
 					printf(" ");
 					scanf("%d", &b);
 					printRank(b);
+					getch();
 					getch();
 					break;
 				}
@@ -535,6 +535,7 @@ int main(void) {
 				printf("\n");
 				printCommand();
 				getch();
+				break;
 			}
 			}
 
