@@ -36,7 +36,7 @@ int getch() {
 
 // 화면 깨끗하게 해주는 함수, Cygwin 사용 시 cls를 clear로 바꿀 것
 void clear() {
-	system("clear");
+	printf("\033[H\033[J");
 }
 
 // 박스 개수와 보관 장소 개수가 다를 때 출력하는 에러 메세지. 출력 후 프로그램이 종료됨
