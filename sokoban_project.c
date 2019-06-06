@@ -257,6 +257,7 @@ void fileload() {
 	}
 	fclose(load);
 
+	//현재 @위치 파악
 	for (int i = 0; i < length_sero[current_stage]; ++i) {
 		int flag = 0;
 		for (int j = 0; j < length_garo[current_stage]; ++j) {
@@ -268,6 +269,12 @@ void fileload() {
 
 		if (flag) break;
 
+	}
+	// 파일 불러오면 undo 사용 불가
+	for (int i = 0; i <= 5; i++) {
+		for (int j = 0; j < length_sero[current_stage]; ++j) {
+			strcpy(before_map[i][j], current_map[j]);
+		}
 	}
 }
 
