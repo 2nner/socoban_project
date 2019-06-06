@@ -7,7 +7,7 @@
 int num_map; // 맵 개수
 int cnt_undo = 5; // 되돌리기 남은 횟수
 char username[11]; // 유저 닉네임
-char PATH_MAP[] = "map_easy.txt"; // map 파일이 있는 경로
+char PATH_MAP[] = "map.txt"; // map 파일이 있는 경로
 char map[6][30][30]; // 맵 저장하는 곳
 char current_map[30][30]; // 현재 플레이중인 맵
 int length_garo[6], length_sero[6]; // Stage 별로 맵 가로 세로 길이 저장
@@ -110,15 +110,14 @@ void getNickname() {
 	while (1) {
 		clear(); // Cygwin에서 화면 깔끔하게 지우고 프로그램 시작하기 위해서 사용
 		printf("유저 이름 입력(영문으로 최대 10글자) : ");
-		scanf("%s", username);
+		scanf("%s%*c", username);
 
 		if (strlen(username) <= 10)
 			break;
-		else
+		else {
 			printf("최대 10글자까지 입력 가능합니다!\n");
-
-		getch();
-		getch();
+			getch();
+		}
 	}
 }
 
@@ -191,23 +190,13 @@ void printRank(int stage) {
 	}
 
 	else {
-
 		clear();
 
 		if (stage == 0) {
-			for (int i = 0; i < 5; i++) {
-
-				while (fscanf(rank, "%s %d", input, &n) != EOF) {
-					printf("%s %d\n", input, n);
-				}
-			}
-
+			while (fscanf(rank, "%s %d", input, &n) != EOF)
+				printf("%s %d\n", input, n);
 		}
-
 		else {
-
-			clear();
-
 			int i = 0; //stage
 			int t = 0;
 			while (fscanf(rank, "%s %d", input, &n) != EOF) {
@@ -240,21 +229,51 @@ void save()
 {
 	FILE* save;
 	save = fopen("sokoban.txt", "w");
-	// fprintf(save, "유저 이름 : %s\n", username);
-	fprintf(save, "Stage %d\n", current_stage);
+	fprintf(save, "%d\n", current_stage); // 현재 스테이지
+	fprintf(save, "%d\n", count); // 움직인 횟수
+	fprintf(save, "%d\n", end_count); // 남은 구멍의 개수
+	fprintf(save, "%s\n", username); // 유저의 이름
 	for (int i = 0; i < length_sero[current_stage]; ++i) {
 		fprintf(save, "%s\n", current_map[i]);
-	}
-	fprintf(save, "움직인 횟수 : %d\n", count);
-	fprintf(save, "남은 구멍 개수 : %d\n", end_count);
+	} // 맵
 	fclose(save);
+}
+
+// 파일불러오기
+void fileload() {
+	FILE *load;
+	load = fopen("sokoban.txt", "r");
+	if (load == NULL) {
+		printf("파일이 존재하지 않습니다.");
+	}
+	else {
+		fscanf(load, "%d", &current_stage); // 현재 스테이지
+		fscanf(load, "%d", &count); // 움직인 횟수
+		fscanf(load, "%d", &end_count); // 남은 구멍의 개수
+		fscanf(load, "%s", &username); // 유저의 이름
+		for (int i = 0; i < length_sero[current_stage]; ++i) {
+			fscanf(load, "%s", current_map[i]);
+		} // 맵
+	}
+	fclose(load);
+
+	for (int i = 0; i < length_sero[current_stage]; ++i) {
+		int flag = 0;
+		for (int j = 0; j < length_garo[current_stage]; ++j) {
+			if (current_map[i][j] == '@') {
+				pwd_s = i, pwd_g = j, flag = 1;
+				break;
+			}
+		}
+
+		if (flag) break;
+
+	}
 }
 
 // 현재 맵 처음부터 다시 시작
 void replay() {
-
 	clear();
-
 	for (int i = 0; i < length_sero[current_stage]; ++i) {
 		strcpy(current_map[i], map[current_stage][i]);
 	}
@@ -298,11 +317,6 @@ void undo() {
 		}
 		cnt_undo -= 1;
 	}
-}
-
-// e키를 누르면 종료함
-void quit() {
-	exit(0);
 }
 
 // n키를 누르면 1라운드부터 재시작함
@@ -388,161 +402,160 @@ void updateRank() {
 
 int main(void) {
 	if (!checkMap()) return 0;
-	getNickname();
+        getNickname();
 
-	clear();
+        clear();
 
-	// 게임 시작
-	for (current_stage = 1; current_stage <= num_map; ++current_stage) {
+        // 게임 시작
+        for (current_stage = 1; current_stage <= num_map; ++current_stage) {
 
-		// 스테이지 복사
-		for (int i = 0; i < length_sero[current_stage]; ++i) {
-			strcpy(current_map[i], map[current_stage][i]);
-		}
+                // 스테이지 복사
+                for (int i = 0; i < length_sero[current_stage]; ++i) {
+                        strcpy(current_map[i], map[current_stage][i]);
+                }
 
-		// 초기 undo를 위한 맵 백업(현재맵으로 모두초기화) + cnt_undo = 5 초기화
-		cnt_undo = 5;
-		for (int i = 0; i <= 5; i++) {
-			for (int j = 0; j < length_sero[current_stage]; ++j) {
-				strcpy(before_map[i][j], current_map[j]);
-			}
-		}
+                // 초기 undo를 위한 맵 백업(현재맵으로 모두초기화) + cnt_undo = 5 초기화
+                cnt_undo = 5;
+                for (int i = 0; i <= 5; i++) {
+                        for (int j = 0; j < length_sero[current_stage]; ++j) {
+                                strcpy(before_map[i][j], current_map[j]);
+                        }
+                }
 
-		// 움직인 횟수 초기화
-		count = 0;
+                // 움직인 횟수 초기화
+                count = 0;
 
-		// 현재 위치 탐색
-		for (int i = 0; i < length_sero[current_stage]; ++i) {
-			int flag = 0;
-			for (int j = 0; j < length_garo[current_stage]; ++j) {
-				if (current_map[i][j] == '@') {
-					pwd_s = i, pwd_g = j, flag = 1;
-					break;
-				}
-			}
+                // 현재 위치 탐색
+                for (int i = 0; i < length_sero[current_stage]; ++i) {
+                        int flag = 0;
+                        for (int j = 0; j < length_garo[current_stage]; ++j) {
+                                if (current_map[i][j] == '@') {
+                                        pwd_s = i, pwd_g = j, flag = 1;
+                                        break;
+                                }
+                        }
 
-			if (flag) break;
-		}
+                        if (flag) break;
+                }
 
-		while (1) {
-			clear();
-			char c;
-			int end_count = 0; // 구멍 개수 세는 변수
+                while (1) {
+                        clear();
+                        char c;
+                        end_count = 0; // 구멍 개수 세는 변수
 
-			printf("%s님 플레이 중\n", username);
-			printf("Stage %d\n", current_stage);
-			// 맵 출력
-			for (int i = 0; i < length_sero[current_stage]; ++i) {
-				printf("%s\n", current_map[i]);
-			}
-			printf("움직인 횟수 : %d\n", count);
-			printf("남은 undo 횟수 : %d\n", cnt_undo);
+                        printf("%s님 플레이 중\n", username);
+                        printf("Stage %d\n", current_stage);
+                        // 맵 출력
+                        for (int i = 0; i < length_sero[current_stage]; ++i) {
+                                printf("%s\n", current_map[i]);
+                        }
+                        printf("움직인 횟수 : %d\n", count);
+                        printf("남은 undo 횟수 : %d\n", cnt_undo);
 
-			// 지정된 장소 안에 박스가 다 들어갔는 지 체크하고, 참일 시에 while문 탈출
-			for (int s = 0; s < length_sero[current_stage]; s++) {
-				for (int g = 0; g < length_garo[current_stage]; g++) {
-					if (current_map[s][g] == 'O')
-						end_count++;
-				}
-			}
-			if (map[current_stage][pwd_s][pwd_g] == 'O') end_count++;
-			printf("남은 박스 개수 : %d\n", end_count);
-			if (end_count == 0) break;
+                        // 지정된 장소 안에 박스가 다 들어갔는 지 체크하고, 참일 시에 while문 탈출
+                        for (int s = 0; s < length_sero[current_stage]; s++) {
+                                for (int g = 0; g < length_garo[current_stage]; g++) {
+                                        if (current_map[s][g] == 'O')
+                                                end_count++;
+                                }
+                        }
+                        if (map[current_stage][pwd_s][pwd_g] == 'O') end_count++;
+                        printf("남은 박스 개수 : %d\n", end_count);
+                        if (end_count == 0) break;
 
-			c = getch();
-			switch (c) {
-			case 'h': { // h
-				count++;
-				move(0, -1, current_stage);
-				break;
-			}
+                        c = getch();
+                        switch (c) {
+                        case 'h': {
+                                count++;
+                                move(0, -1, current_stage);
+                                break;
+                        }
 
-			case 'j': { // j
-				count++;
-				move(1, 0, current_stage);
-				break;
-			}
+                        case 'j': {
+                                count++;
+                                move(1, 0, current_stage);
+                                break;
+                        }
 
-			case 'k': { // k
-				count++;
-				move(-1, 0, current_stage);
-				break;
-			}
+                        case 'k': {
+                                count++;
+                                move(-1, 0, current_stage);
+                                break;
+                        }
 
-			case 'l': { // l
-				count++;
-				move(0, 1, current_stage);
-				break;
-			}
+                        case 'l': {
+                                count++;
+                                move(0, 1, current_stage);
+                                break;
+                        }
 
-			case 's': { // s
-				save();
-				printf("\n    저장이 완료되었습니다\n(계속하려면 아무키나 누르세요)");
-				getch();
-				break;
-			}
+                        case 's': {
+                                save();
+                                printf("\n    저장이 완료되었습니다\n(계속하려면 아무키나 누르세요)");
+                                getch();
+                                break;
+                        }
 
-			case 'r': { // r
-				replay();
-				break;
-			}
-			case 'e': { //e
-				save();
-				printf("\n    저장이 완료되었습니다. 종료합니다.\n");
-				quit();
-				break;
-			}
+                        case 'r': {
+                                replay();
+                                break;
+                        }
+                        case 'f': {
+                                fileload();
+                                break;
+                        }
+                        case 'e': {
+                                save();
+                                printf("\n    저장이 완료되었습니다. 종료합니다.\n");
+                                return 0;
+                        }
 
-			case 'n': { //n
-				newstart();
-				break;
-			}
+                        case 'n': {
+                                newstart();
+                                break;
+                        }
 
-			case 'u': { //u
-				undo();
-				break;
-			}
+                        case 'u': {
+                                undo();
+                                break;
+                        }
 
-			case 't': { // t
-				printf("t");
-				char a;
-				a = getch();
+                        case 't': {
+                                printf("t");
+                                char a;
+                                a = getch();
 
-				switch (a) {
-				case 13: { // 엔터
-					printRank(0);
-					getch();
-					getch();
-					break;
-				}
-				case 32: {  // 스페이스바
-					int b;
-					printf(" ");
-					scanf("%d", &b);
-					printRank(b);
-					getch();
-					getch();
-					break;
-				}
-				}
-				break;
-			}
+                                switch (a) {
+                                case 10: { // 엔터
+                                        printRank(0);
+                                        getch();
+                                        break;
+                                }
+                                case 32: {  // 스페이스바
+                                        int b;
+                                        printf(" ");
+                                        scanf("%d%*c", &b);
+                                        printRank(b);
+                                        getch();
+                                        break;
+                                }
+                                }
+                                break;
+                        }
 
-			case 'd': { // d
-				printf("\n");
-				printCommand();
-				getch();
-				break;
-			}
-			}
+                        case 'd': { // d
+                                printf("\n");
+                                printCommand();
+                                getch();
+                                break;
+                        }
+                        }
 
-		}
-		printf("Stage %d Clear!", current_stage);
-		updateRank();
-		count = 0;
-		fflush(stdin);
-		getch();
-	}
-	printf("스테이지를 모두 완료하셨네요 축하합니다. \n");
-	getch();
+                }
+                printf("Stage %d Clear!", current_stage);
+                updateRank();
+                getch();
+        }
+        printf("스테이지를 모두 완료하셨네요 축하합니다. \n");
+        getch();
 }
