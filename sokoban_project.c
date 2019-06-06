@@ -231,6 +231,7 @@ void save()
 	save = fopen("sokoban.txt", "w");
 	fprintf(save, "%d\n", current_stage); // 현재 스테이지
 	fprintf(save, "%d\n", count); // 움직인 횟수
+	fprintf(save, "%d\n", cnt_undo); //남은 undo 횟수
 	fprintf(save, "%d\n", end_count); // 남은 구멍의 개수
 	fprintf(save, "%s\n", username); // 유저의 이름
 	for (int i = 0; i < length_sero[current_stage]; ++i) {
@@ -249,6 +250,7 @@ void fileload() {
 	else {
 		fscanf(load, "%d", &current_stage); // 현재 스테이지
 		fscanf(load, "%d", &count); // 움직인 횟수
+		fscanf(load, "%d", &cnt_undo); //남은 undo 횟수
 		fscanf(load, "%d", &end_count); // 남은 구멍의 개수
 		fscanf(load, "%s", &username); // 유저의 이름
 		for (int i = 0; i < length_sero[current_stage]; ++i) {
