@@ -292,7 +292,7 @@ void replay() {
 	}
 }
 
-// u키를 누르면 이전으로 돌아감 (undo 구현, 현재맵을 백업파일로 바꾸고 횟수 1 차감함)
+// u키를 누르면 이전으로 돌아감 (undo 구현, 현재맵을 백업파일로 바꾸고 횟수 1 차감함, count 횟수 추가됨)
 void undo() {
 	if (cnt_undo != 0) {
 		for (int i = 0; i < length_sero[current_stage]; ++i) {
@@ -315,6 +315,7 @@ void undo() {
 			if (flag) break;
 
 		}
+		count += 1;
 		cnt_undo -= 1;
 	}
 }
