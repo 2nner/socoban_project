@@ -124,14 +124,11 @@ void getNickname() {
 // 움직임이 구현되있는 함수, 사용법 : move(울직이는 세로 칸 수, 움직이는 가로 칸 수, 현재 스테이지 넘버)
 void move(int s, int g, int current_stage) {
 
-	//undo를 쓰기위한 이전 맵 데이터 저장 (움직일 때마다 백업맵에다 저장)
-	for (int i = 4; i >= 0; i--) {
-		for (int j = 0; j < length_sero[current_stage]; ++j) {
-			strcpy(before_map[i + 1][j], before_map[i][j]);
-		}
-	}
-	for (int i = 0; i < length_sero[current_stage]; ++i) {
-		strcpy(before_map[0][i], current_map[i]);
+    // 맵 임시 저장
+    char tmp_map[30][30];
+
+    for (int i = 0; i < length_sero[current_stage]; ++i) {
+		strcpy(tmp_map[i], current_map[i]);
 	}
 
 	//움직임 구현
@@ -170,6 +167,15 @@ void move(int s, int g, int current_stage) {
 	pwd_s += s;
 	pwd_g += g;
 
+    //undo를 쓰기위한 이전 맵 데이터 저장 (움직일 때마다 백업맵에다 저장)
+	for (int i = 4; i >= 0; i--) {
+		for (int j = 0; j < length_sero[current_stage]; ++j) {
+			strcpy(before_map[i + 1][j], before_map[i][j]);
+		}
+	}
+	for (int i = 0; i < length_sero[current_stage]; ++i) {
+		strcpy(before_map[0][i], tmp_map[i]);
+	}
 }
 
 // 랭킹 출력
