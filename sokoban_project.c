@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <conio.h> // Cygwin 사용 시 주석 처리
-#include <termios.h> // Cygwin 사용 시 주석 해제
+#include <termios.h>
 
 int num_map; // 맵 개수
 int cnt_undo = 5; // 되돌리기 남은 횟수
@@ -36,7 +35,8 @@ int getch() {
 
 // 화면 깨끗하게 해주는 함수, Cygwin 사용 시 cls를 clear로 바꿀 것
 void clear() {
-	printf("\033[H\033[J");
+	// printf("\033[H\033[J");
+	system("clear");
 }
 
 // 박스 개수와 보관 장소 개수가 다를 때 출력하는 에러 메세지. 출력 후 프로그램이 종료됨
@@ -572,6 +572,5 @@ int main(void) {
                 updateRank();
                 getch();
         }
-        printf("스테이지를 모두 완료하셨네요 축하합니다. \n");
-        getch();
+        printf("\n스테이지를 모두 완료하셨네요 축하합니다. \n");
 }
