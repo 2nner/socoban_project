@@ -128,8 +128,8 @@ void move(int s, int g, int current_stage) {
     char tmp_map[30][30];
 
     for (int i = 0; i < length_sero[current_stage]; ++i) {
-		strcpy(tmp_map[i], current_map[i]);
-	}
+	strcpy(tmp_map[i], current_map[i]);
+    }
 
 	//움직임 구현
 	if (current_map[pwd_s + s][pwd_g + g] == '.' || current_map[pwd_s + s][pwd_g + g] == 'O') {
@@ -419,6 +419,13 @@ void updateRank() {
 int main(void) {
 	if (!checkMap()) return 0;
         getNickname();
+
+	// ranking.txt 파일 생성
+	FILE *f = fopen("ranking.txt", "w");
+	for(int i = 1; i <= 5; i++) {
+		fprintf(f, "-Stage %d\n", i);
+	}
+	fclose(f);
 
         clear();
 
