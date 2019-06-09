@@ -421,9 +421,13 @@ int main(void) {
         getNickname();
 
 	// ranking.txt 파일 생성
-	FILE *f = fopen("ranking.txt", "w");
-	for(int i = 1; i <= 5; i++) {
-		fprintf(f, "-Stage %d\n", i);
+	FILE *f = fopen("ranking.txt", "r");
+
+	if (f == NULL) {
+		f = fopen("ranking.txt", "w");
+		for(int i = 1; i <= 5; i++) {
+			fprintf(f, "-Stage %d\n", i);
+		}
 	}
 	fclose(f);
 
